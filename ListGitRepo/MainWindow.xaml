@@ -5,8 +5,68 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ListGitRepo"
         mc:Ignorable="d"
-        Title="List GIT Repos" Height="450" Width="800">
-    <Grid>
-        
+        Title="Gestionnaire de dépôts Git" Height="600" Width="1000">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="URL du dépôt :" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <TextBox x:Name="txtRepoUrl" Width="400" Margin="0,0,5,0"/>
+            <Button x:Name="btnAddRepo" Content="Ajouter" Width="80" Margin="0,0,5,0" Click="BtnAddRepo_Click"/>
+            <Button x:Name="btnCloneRepo" Content="Cloner" Width="80" Margin="0,0,5,0" Click="BtnCloneRepo_Click"/>
+            <Button x:Name="btnRefresh" Content="Rafraîchir" Width="80" Click="BtnRefresh_Click"/>
+        </StackPanel>
+
+        <!-- Liste des dépôts -->
+        <DataGrid x:Name="dgRepos" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False"
+                 SelectionMode="Single" IsReadOnly="True" Margin="0,0,0,10"
+                 ItemsSource="{Binding Repositories}" SelectedItem="{Binding SelectedRepository}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Nom" Binding="{Binding Name}" Width="200"/>
+                <DataGridTextColumn Header="Chemin local" Binding="{Binding LocalPath}" Width="300"/>
+                <DataGridTextColumn Header="Branche" Binding="{Binding Branch}" Width="150"/>
+                <DataGridTextColumn Header="Dernier commit" Binding="{Binding LastCommit}" Width="200"/>
+                <DataGridTextColumn Header="État" Binding="{Binding Status}" Width="100">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="À jour">
+                                    <Setter Property="Foreground" Value="Green"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Mise à jour disponible">
+                                    <Setter Property="Foreground" Value="Orange"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Erreur">
+                                    <Setter Property="Foreground" Value="Red"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Barre d'outils -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="btnPull" Content="Mettre à jour (Pull)" Width="150" Height="30" Margin="5,0" Click="BtnPull_Click" IsEnabled="False"/>
+            <Button x:Name="btnOpenFolder" Content="Ouvrir le dossier" Width="120" Height="30" Margin="5,0" Click="BtnOpenFolder_Click" IsEnabled="False"/>
+            <Button x:Name="btnOpenInExplorer" Content="Ouvrir dans l'explorateur" Width="180" Height="30" Margin="5,0" Click="BtnOpenInExplorer_Click" IsEnabled="False"/>
+            <Button x:Name="btnRemove" Content="Supprimer" Width="100" Height="30" Margin="5,0" Click="BtnRemove_Click" Foreground="Red" IsEnabled="False"/>
+        </StackPanel>
+
+        <!-- Barre d'état -->
+        <StatusBar Grid.Row="3" VerticalAlignment="Bottom">
+            <StatusBarItem>
+                <TextBlock x:Name="lblStatus" Text="Prêt"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock x:Name="lblLastUpdate" Text="Dernière mise à jour : --/--/---- --:--:--"/>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>
