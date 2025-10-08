@@ -34,5 +34,16 @@ namespace ListGitRepo.Properties {
                 this["BaseRepositoryPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.Collections.Specialized.StringCollection RepositoryList {
+            get {
+                return ((global::System.Collections.Specialized.StringCollection)(this["RepositoryList"]));
+            }
+            set {
+                this["RepositoryList"] = value;
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using LibGit2Sharp;
 using ListGitRepo.Models;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -77,26 +78,6 @@ namespace ListGitRepo
       btnOpenFolder.IsEnabled = hasSelection;
       btnOpenInExplorer.IsEnabled = hasSelection;
       btnRemove.IsEnabled = hasSelection;
-    }
-
-    private void LoadRepositories()
-    {
-      try
-      {
-        // Charger les dépôts depuis un fichier de configuration
-        // À implémenter : charger depuis un fichier de configuration
-        Repositories.Clear();
-
-        // Exemple de dépôt de test (à supprimer en production)
-        // Repositories.Add(new GitRepository { Name = "Test Repo", LocalPath = "C:\\Git\\test-repo" });
-
-        UpdateStatus($"{Repositories.Count} dépôts chargés");
-        UpdateLastUpdateTime();
-      }
-      catch (Exception exception)
-      {
-        ShowError("Erreur lors du chargement des dépôts", exception);
-      }
     }
 
     private void BtnAddRepo_Click(object sender, RoutedEventArgs e)
@@ -304,20 +285,6 @@ namespace ListGitRepo
       UpdateStatus("Liste des dépôts actualisée");
     }
 
-    private void SaveRepositories()
-    {
-      try
-      {
-        // À implémenter : sauvegarder dans un fichier de configuration
-        // Par exemple : JSON ou XML
-        UpdateLastUpdateTime();
-      }
-      catch (Exception exception)
-      {
-        ShowError("Erreur lors de la sauvegarde des dépôts", exception);
-      }
-    }
-
     private void UpdateStatus(string message)
     {
       Status = message;
@@ -402,6 +369,75 @@ namespace ListGitRepo
       if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
       {
         BaseRepositoryPath = dialog.SelectedPath;
+      }
+    }
+
+    private void SaveRepositories()
+    {
+      try
+      {
+        var repoDataList = Repositories.Select(r => new RepositoryData
+        {
+          Name = r.Name,
+          Url = r.Url,
+          LocalPath = r.LocalPath,
+          Status = r.Status,
+          Branch = r.Branch,
+          LastCommit = r.LastCommit
+        }).ToList();
+
+        var serializer = new System.Xml.Serialization.XmlSerializer(typeof(List<RepositoryData>));
+        using (var writer = new StringWriter())
+        {
+          serializer.Serialize(writer, repoDataList);
+          Properties.Settings.Default.RepositoryList = new System.Collections.Specialized.StringCollection();
+          Properties.Settings.Default.RepositoryList.Add(writer.ToString());
+          Properties.Settings.Default.Save();
+        }
+
+        UpdateStatus("Liste des dépôts sauvegardée");
+      }
+      catch (Exception exception)
+      {
+        ShowError("Erreur lors de la sauvegarde des dépôts", exception);
+      }
+    }
+
+    private void LoadRepositories()
+    {
+      try
+      {
+        Repositories.Clear();
+
+        if (Properties.Settings.Default.RepositoryList != null &&
+            Properties.Settings.Default.RepositoryList.Count > 0)
+        {
+          var serializer = new System.Xml.Serialization.XmlSerializer(typeof(List<RepositoryData>));
+          using (var reader = new StringReader(Properties.Settings.Default.RepositoryList[0]))
+          {
+            var repoDataList = (List<RepositoryData>)serializer.Deserialize(reader);
+
+            foreach (var repoData in repoDataList)
+            {
+              Repositories.Add(new GitRepository
+              {
+                Name = repoData.Name,
+                Url = repoData.Url,
+                LocalPath = repoData.LocalPath,
+                Status = repoData.Status,
+                Branch = repoData.Branch,
+                LastCommit = repoData.LastCommit
+              });
+            }
+          }
+        }
+
+        UpdateStatus($"{Repositories.Count} dépôts chargés");
+        UpdateLastUpdateTime();
+      }
+      catch (Exception ex)
+      {
+        ShowError("Erreur lors du chargement des dépôts", ex);
       }
     }
   }
