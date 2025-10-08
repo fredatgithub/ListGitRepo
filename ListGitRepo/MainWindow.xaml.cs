@@ -57,17 +57,17 @@ namespace ListGitRepo
       InitializeComponent();
       DataContext = this;
       // Charger le chemin de base sauvegardé
-    if (!string.IsNullOrWhiteSpace(Properties.Settings.Default.BaseRepositoryPath))
-    {
+      if (!string.IsNullOrWhiteSpace(Properties.Settings.Default.BaseRepositoryPath))
+      {
         BaseRepositoryPath = Properties.Settings.Default.BaseRepositoryPath;
-    }
-    else
-    {
+      }
+      else
+      {
         BaseRepositoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Git");
-    }
-    
-    Repositories = new ObservableCollection<GitRepository>();
-    LoadRepositories();
+      }
+
+      Repositories = new ObservableCollection<GitRepository>();
+      LoadRepositories();
     }
 
     private void UpdateButtonStates()
@@ -100,43 +100,43 @@ namespace ListGitRepo
     }
 
     private void BtnAddRepo_Click(object sender, RoutedEventArgs e)
-{
-    string repoUrl = txtRepoUrl.Text.Trim();
-    if (string.IsNullOrEmpty(repoUrl))
     {
-        MessageBox.Show("Veuillez entrer une URL de dépôt valide.", "Erreur", 
+      string repoUrl = txtRepoUrl.Text.Trim();
+      if (string.IsNullOrEmpty(repoUrl))
+      {
+        MessageBox.Show("Veuillez entrer une URL de dépôt valide.", "Erreur",
                       MessageBoxButton.OK, MessageBoxImage.Warning);
         return;
-    }
+      }
 
-    try
-    {
+      try
+      {
         if (Repositories.Any(r => r.Url.Equals(repoUrl, StringComparison.OrdinalIgnoreCase)))
         {
-            MessageBox.Show("Ce dépôt est déjà dans la liste.", "Information", 
-                          MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
+          MessageBox.Show("Ce dépôt est déjà dans la liste.", "Information",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+          return;
         }
 
         var repoName = Path.GetFileNameWithoutExtension(repoUrl);
         var repo = new GitRepository
         {
-            Name = repoName,
-            Url = repoUrl,
-            LocalPath = Path.Combine(BaseRepositoryPath, repoName),
-            Status = "Non cloné"
+          Name = repoName,
+          Url = repoUrl,
+          LocalPath = Path.Combine(BaseRepositoryPath, repoName),
+          Status = "Non cloné"
         };
 
         Repositories.Add(repo);
         SaveRepositories();
         txtRepoUrl.Clear();
         UpdateStatus($"Dépôt ajouté : {repo.Name}");
-    }
-    catch (Exception exception)
-    {
+      }
+      catch (Exception exception)
+      {
         ShowError("Erreur lors de l'ajout du dépôt", exception);
+      }
     }
-}
 
     private async void BtnCloneRepo_Click(object sender, RoutedEventArgs e)
     {
@@ -372,37 +372,37 @@ namespace ListGitRepo
     }
 
     private string BaseRepositoryPath
-{
-    get
     {
+      get
+      {
         var defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Git");
-        return !string.IsNullOrWhiteSpace(txtBaseDirectory.Text) 
-            ? txtBaseDirectory.Text 
+        return !string.IsNullOrWhiteSpace(txtBaseDirectory.Text)
+            ? txtBaseDirectory.Text
             : defaultPath;
+      }
+      set => txtBaseDirectory.Text = value;
     }
-    set => txtBaseDirectory.Text = value;
-}
 
-private void TxtBaseDirectory_TextChanged(object sender, TextChangedEventArgs e)
-{
-    // Sauvegarder le chemin dans les paramètres
-    Properties.Settings.Default.BaseRepositoryPath = txtBaseDirectory.Text;
-    Properties.Settings.Default.Save();
-}
-
-private void BtnBrowse_Click(object sender, RoutedEventArgs e)
-{
-    var dialog = new System.Windows.Forms.FolderBrowserDialog
+    private void TxtBaseDirectory_TextChanged(object sender, TextChangedEventArgs e)
     {
-        SelectedPath = Directory.Exists(txtBaseDirectory.Text) 
-            ? txtBaseDirectory.Text 
-            : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-    };
+      // Sauvegarder le chemin dans les paramètres
+      Properties.Settings.Default.BaseRepositoryPath = txtBaseDirectory.Text;
+      Properties.Settings.Default.Save();
+    }
 
-    if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+    private void BtnBrowse_Click(object sender, RoutedEventArgs e)
     {
+      var dialog = new System.Windows.Forms.FolderBrowserDialog
+      {
+        SelectedPath = Directory.Exists(txtBaseDirectory.Text)
+              ? txtBaseDirectory.Text
+              : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+      };
+
+      if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+      {
         BaseRepositoryPath = dialog.SelectedPath;
+      }
     }
-}
   }
 }
