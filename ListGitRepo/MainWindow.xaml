@@ -11,6 +11,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- En-tête -->
@@ -52,7 +53,7 @@
         </DataGrid>
 
         <!-- Barre d'outils -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
             <Button x:Name="btnPull" Content="Mettre à jour (Pull)" Width="150" Height="30" Margin="5,0" Click="BtnPull_Click" IsEnabled="False"/>
             <Button x:Name="btnOpenFolder" Content="Ouvrir le dossier" Width="120" Height="30" Margin="5,0" Click="BtnOpenFolder_Click" IsEnabled="False"/>
             <Button x:Name="btnOpenInExplorer" Content="Ouvrir dans l'explorateur" Width="180" Height="30" Margin="5,0" Click="BtnOpenInExplorer_Click" IsEnabled="False"/>
