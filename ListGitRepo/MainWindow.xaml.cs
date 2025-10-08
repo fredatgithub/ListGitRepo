@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Configuration;
+using System.Windows.Controls;
 
 namespace ListGitRepo
 {
@@ -27,6 +27,7 @@ namespace ListGitRepo
     }
 
     private ObservableCollection<GitRepository> _repositories;
+
     public ObservableCollection<GitRepository> Repositories
     {
       get => _repositories;
@@ -55,8 +56,18 @@ namespace ListGitRepo
     {
       InitializeComponent();
       DataContext = this;
-      Repositories = new ObservableCollection<GitRepository>();
-      LoadRepositories();
+      // Charger le chemin de base sauvegardé
+    if (!string.IsNullOrWhiteSpace(Properties.Settings.Default.BaseRepositoryPath))
+    {
+        BaseRepositoryPath = Properties.Settings.Default.BaseRepositoryPath;
+    }
+    else
+    {
+        BaseRepositoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Git");
+    }
+    
+    Repositories = new ObservableCollection<GitRepository>();
+    LoadRepositories();
     }
 
     private void UpdateButtonStates()
@@ -82,49 +93,50 @@ namespace ListGitRepo
         UpdateStatus($"{Repositories.Count} dépôts chargés");
         UpdateLastUpdateTime();
       }
-      catch (Exception ex)
+      catch (Exception exception)
       {
-        ShowError("Erreur lors du chargement des dépôts", ex);
+        ShowError("Erreur lors du chargement des dépôts", exception);
       }
     }
 
     private void BtnAddRepo_Click(object sender, RoutedEventArgs e)
+{
+    string repoUrl = txtRepoUrl.Text.Trim();
+    if (string.IsNullOrEmpty(repoUrl))
     {
-      string repoUrl = txtRepoUrl.Text.Trim();
-      if (string.IsNullOrEmpty(repoUrl))
-      {
-        MessageBox.Show("Veuillez entrer une URL de dépôt valide.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+        MessageBox.Show("Veuillez entrer une URL de dépôt valide.", "Erreur", 
+                      MessageBoxButton.OK, MessageBoxImage.Warning);
         return;
-      }
+    }
 
-      try
-      {
-        // Vérifier si le dépôt existe déjà
+    try
+    {
         if (Repositories.Any(r => r.Url.Equals(repoUrl, StringComparison.OrdinalIgnoreCase)))
         {
-          MessageBox.Show("Ce dépôt est déjà dans la liste.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
-          return;
+            MessageBox.Show("Ce dépôt est déjà dans la liste.", "Information", 
+                          MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
         }
 
-        // Créer un nouveau dépôt
+        var repoName = Path.GetFileNameWithoutExtension(repoUrl);
         var repo = new GitRepository
         {
-          Name = Path.GetFileNameWithoutExtension(repoUrl),
-          Url = repoUrl,
-          LocalPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Git", Path.GetFileNameWithoutExtension(repoUrl)),
-          Status = "Non cloné"
+            Name = repoName,
+            Url = repoUrl,
+            LocalPath = Path.Combine(BaseRepositoryPath, repoName),
+            Status = "Non cloné"
         };
 
         Repositories.Add(repo);
         SaveRepositories();
         txtRepoUrl.Clear();
         UpdateStatus($"Dépôt ajouté : {repo.Name}");
-      }
-      catch (Exception ex)
-      {
-        ShowError("Erreur lors de l'ajout du dépôt", ex);
-      }
     }
+    catch (Exception exception)
+    {
+        ShowError("Erreur lors de l'ajout du dépôt", exception);
+    }
+}
 
     private async void BtnCloneRepo_Click(object sender, RoutedEventArgs e)
     {
@@ -149,9 +161,9 @@ namespace ListGitRepo
 
           Dispatcher.Invoke(() =>
                 {
-                Status = "Clonage en cours...";
-                repo.Status = "Clonage...";
-              });
+                  Status = "Clonage en cours...";
+                  repo.Status = "Clonage...";
+                });
 
           // Créer le répertoire parent si nécessaire
           Directory.CreateDirectory(Path.GetDirectoryName(repo.LocalPath));
@@ -161,22 +173,22 @@ namespace ListGitRepo
 
           Dispatcher.Invoke(() =>
                 {
-                repo.Status = "À jour";
-                UpdateStatus($"Dépôt cloné avec succès : {repo.Name}");
-                SaveRepositories();
-              });
+                  repo.Status = "À jour";
+                  UpdateStatus($"Dépôt cloné avec succès : {repo.Name}");
+                  SaveRepositories();
+                });
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
           Dispatcher.Invoke(() =>
                 {
-                ShowError("Erreur lors du clonage du dépôt", ex);
-                var repo = Repositories.FirstOrDefault(r => r.Url.Equals(txtRepoUrl.Text.Trim(), StringComparison.OrdinalIgnoreCase));
-                if (repo != null)
-                {
-                  repo.Status = "Erreur";
-                }
-              });
+                  ShowError("Erreur lors du clonage du dépôt", exception);
+                  var repo = Repositories.FirstOrDefault(r => r.Url.Equals(txtRepoUrl.Text.Trim(), StringComparison.OrdinalIgnoreCase));
+                  if (repo != null)
+                  {
+                    repo.Status = "Erreur";
+                  }
+                });
         }
       });
     }
@@ -191,9 +203,9 @@ namespace ListGitRepo
         {
           Dispatcher.Invoke(() =>
                 {
-                Status = "Mise à jour en cours...";
-                SelectedRepository.Status = "Mise à jour...";
-              });
+                  Status = "Mise à jour en cours...";
+                  SelectedRepository.Status = "Mise à jour...";
+                });
 
           using (var repo = new Repository(SelectedRepository.LocalPath))
           {
@@ -227,13 +239,13 @@ namespace ListGitRepo
                   });
           }
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
           Dispatcher.Invoke(() =>
                 {
-                ShowError($"Erreur lors de la mise à jour du dépôt {SelectedRepository.Name}", ex);
-                SelectedRepository.Status = "Erreur";
-              });
+                  ShowError($"Erreur lors de la mise à jour du dépôt {SelectedRepository.Name}", exception);
+                  SelectedRepository.Status = "Erreur";
+                });
         }
       });
     }
@@ -255,9 +267,9 @@ namespace ListGitRepo
               "Dossier introuvable", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
       }
-      catch (Exception ex)
+      catch (Exception exception)
       {
-        ShowError("Erreur lors de l'ouverture du dossier", ex);
+        ShowError("Erreur lors de l'ouverture du dossier", exception);
       }
     }
 
@@ -300,9 +312,9 @@ namespace ListGitRepo
         // Par exemple : JSON ou XML
         UpdateLastUpdateTime();
       }
-      catch (Exception ex)
+      catch (Exception exception)
       {
-        ShowError("Erreur lors de la sauvegarde des dépôts", ex);
+        ShowError("Erreur lors de la sauvegarde des dépôts", exception);
       }
     }
 
@@ -317,16 +329,16 @@ namespace ListGitRepo
       lblLastUpdate.Text = $"Dernière mise à jour : {DateTime.Now:dd/MM/yyyy HH:mm:ss}";
     }
 
-    private void ShowError(string message, Exception ex)
+    private void ShowError(string message, Exception exception)
     {
-      string errorMessage = $"{message}: {ex.Message}";
+      string errorMessage = $"{message}: {exception.Message}";
       Debug.WriteLine($"[ERREUR] {errorMessage}");
-      Debug.WriteLine(ex.StackTrace);
+      Debug.WriteLine(exception.StackTrace);
 
       Dispatcher.Invoke(() =>
       {
         MessageBox.Show(errorMessage, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-        Status = "Erreur : " + ex.Message;
+        Status = "Erreur : " + exception.Message;
       });
     }
 
@@ -335,10 +347,10 @@ namespace ListGitRepo
       PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-{
-    if (WindowState == WindowState.Maximized)
+    private void Window_Closing(object sender, CancelEventArgs e)
     {
+      if (WindowState == WindowState.Maximized)
+      {
         // Utiliser les propriétés RestoreBounds pour obtenir la taille et la position avant la maximisation
         var settings = (WindowSettings)FindResource("WindowSettings");
         settings.Top = RestoreBounds.Top;
@@ -346,9 +358,9 @@ namespace ListGitRepo
         settings.Width = RestoreBounds.Width;
         settings.Height = RestoreBounds.Height;
         settings.WindowState = WindowState.Maximized;
-    }
-    else
-    {
+      }
+      else
+      {
         // Sauvegarder la taille et la position normales
         var settings = (WindowSettings)FindResource("WindowSettings");
         settings.Top = Top;
@@ -356,6 +368,40 @@ namespace ListGitRepo
         settings.Width = Width;
         settings.Height = Height;
         settings.WindowState = WindowState.Normal;
+      }
+    }
+
+    private string BaseRepositoryPath
+{
+    get
+    {
+        var defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Git");
+        return !string.IsNullOrWhiteSpace(txtBaseDirectory.Text) 
+            ? txtBaseDirectory.Text 
+            : defaultPath;
+    }
+    set => txtBaseDirectory.Text = value;
+}
+
+private void TxtBaseDirectory_TextChanged(object sender, TextChangedEventArgs e)
+{
+    // Sauvegarder le chemin dans les paramètres
+    Properties.Settings.Default.BaseRepositoryPath = txtBaseDirectory.Text;
+    Properties.Settings.Default.Save();
+}
+
+private void BtnBrowse_Click(object sender, RoutedEventArgs e)
+{
+    var dialog = new System.Windows.Forms.FolderBrowserDialog
+    {
+        SelectedPath = Directory.Exists(txtBaseDirectory.Text) 
+            ? txtBaseDirectory.Text 
+            : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+    };
+
+    if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+    {
+        BaseRepositoryPath = dialog.SelectedPath;
     }
 }
   }
