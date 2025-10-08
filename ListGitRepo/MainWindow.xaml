@@ -5,7 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ListGitRepo"
         mc:Ignorable="d"
-        Title="Gestionnaire de dépôts Git" Height="600" Width="1000">
+        Title="Gestionnaire de dépôts Git"
+        WindowStartupLocation="Manual"
+        Top="{Binding Source={StaticResource WindowSettings}, Path=Top, Mode=TwoWay}"
+        Left="{Binding Source={StaticResource WindowSettings}, Path=Left, Mode=TwoWay}"
+        Width="{Binding Source={StaticResource WindowSettings}, Path=Width, Mode=TwoWay}"
+        Height="{Binding Source={StaticResource WindowSettings}, Path=Height, Mode=TwoWay}"
+        WindowState="{Binding Source={StaticResource WindowSettings}, Path=WindowState, Mode=TwoWay}"
+        Closing="Window_Closing">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

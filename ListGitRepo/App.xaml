@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:ListGitRepo"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <local:WindowSettings x:Key="WindowSettings" />
     </Application.Resources>
 </Application>

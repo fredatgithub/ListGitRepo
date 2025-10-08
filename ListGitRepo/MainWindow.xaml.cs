@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Configuration;
 
 namespace ListGitRepo
 {
@@ -333,5 +334,29 @@ namespace ListGitRepo
     {
       PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
+
+    private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+{
+    if (WindowState == WindowState.Maximized)
+    {
+        // Utiliser les propriétés RestoreBounds pour obtenir la taille et la position avant la maximisation
+        var settings = (WindowSettings)FindResource("WindowSettings");
+        settings.Top = RestoreBounds.Top;
+        settings.Left = RestoreBounds.Left;
+        settings.Width = RestoreBounds.Width;
+        settings.Height = RestoreBounds.Height;
+        settings.WindowState = WindowState.Maximized;
+    }
+    else
+    {
+        // Sauvegarder la taille et la position normales
+        var settings = (WindowSettings)FindResource("WindowSettings");
+        settings.Top = Top;
+        settings.Left = Left;
+        settings.Width = Width;
+        settings.Height = Height;
+        settings.WindowState = WindowState.Normal;
+    }
+}
   }
 }
